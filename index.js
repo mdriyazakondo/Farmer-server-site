@@ -213,6 +213,21 @@ async function run() {
           .send({ message: "Failed to delete product", error: error.message });
       }
     });
+
+    app.get("/my-posted", verifyToken, async (req, res) => {
+      try {
+        const email = req.query.email;
+        const result = await productCollection
+          .find({ "owner.ownerEmail": email })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        res
+          .status(500)
+          .send({ message: "Failed to delete product", error: error.message });
+      }
+    });
+
     app.get("/search", async (req, res) => {
       try {
         const search = req.query.search || "";
