@@ -309,6 +309,31 @@ async function run() {
       );
       res.send(result);
     });
+
+    app.get("/products/:id/interests", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
+
+    app.get("/my-interests", verifyToken, async (req, res) => {
+      const userEmail = req.query.userEmail;
+      const crops = await productCollection
+        .find({
+          "interests.userEmail": userEmail,
+        })
+        .toArray();
+      const interestCrops = crops.map((crop) => {
+        const interest = crop.interests.find((i) => i.userEmail === userEmail);
+        return {
+          cropId: crop._id,
+          cropName: crop.name,
+          interest,
+        };
+      });
+      res.send(interestCrops);
+    });
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error.message);
   }
