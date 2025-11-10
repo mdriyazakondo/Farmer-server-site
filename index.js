@@ -267,6 +267,48 @@ async function run() {
           .send({ message: "Failed to fetch crops", error: error.message });
       }
     });
+
+    app.post("/products/:id/interests", verifyToken, async (req, res) => {
+      const cropId = req.params.id;
+      const query = { _id: new ObjectId(cropId) };
+      const { userEmail, userName, quantity, message } = req.body;
+
+      if (!quantity || quantity < 1) {
+        return res.status(400).send({ message: "Quantity must be at least 1" });
+      }
+
+      const crop = await productCollection.findOne(query);
+      if (!crop) return res.status(404).send({ message: "Crop not found" });
+      if (crop.owner.ownerEmail === userEmail) {
+        return res
+          .status(403)
+          .send({ message: "Owner cannot submit interest on their own crop" });
+      }
+
+      const existing = crop.interests.find((i) => i.userEmail === userEmail);
+      if (existing) {
+        return res
+          .status(400)
+          .send({ message: "You’ve already sent an interest" });
+      }
+
+      const interestsId = new ObjectId();
+      const newInterest = {
+        _id: interestsId,
+        cropId: crop._id.toString(),
+        userEmail,
+        userName,
+        quantity,
+        message,
+        status: "pending",
+        createdAt: new Date(),
+      };
+      const result = await productCollection.updateOne(
+        { _id: new ObjectId(cropId) },
+        { $push: { interests: newInterest } }
+      );
+      res.send(result);
+    });
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error.message);
   }
