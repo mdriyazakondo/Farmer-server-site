@@ -55,62 +55,6 @@ async function run() {
 
     console.log("✅ Successfully connected to MongoDB!");
 
-    // ---------------- USERS ----------------
-    app.get("/users", async (req, res) => {
-      try {
-        const result = await userCollection.find().toArray();
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: "Failed to fetch users" });
-      }
-    });
-
-    app.get("/users/:id", async (req, res) => {
-      try {
-        const id = req.params.id;
-        const result = await userCollection.findOne({ _id: new ObjectId(id) });
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: "Failed to fetch user" });
-      }
-    });
-
-    app.post("/users", async (req, res) => {
-      try {
-        const newUser = req.body;
-        const result = await userCollection.insertOne(newUser);
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: "Failed to add user" });
-      }
-    });
-
-    app.put("/users/:id", async (req, res) => {
-      try {
-        const id = req.params.id;
-        const updateUser = req.body;
-        const result = await userCollection.updateOne(
-          { _id: new ObjectId(id) },
-          { $set: updateUser }
-        );
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: "Failed to update user" });
-      }
-    });
-
-    app.delete("/users/:id", verifyToken, async (req, res) => {
-      try {
-        const id = req.params.id;
-        const result = await userCollection.deleteOne({
-          _id: new ObjectId(id),
-        });
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({ message: "Failed to delete user" });
-      }
-    });
-
     // ---------------- PRODUCTS ----------------
     app.get("/products", async (req, res) => {
       try {
