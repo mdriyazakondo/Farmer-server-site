@@ -268,6 +268,14 @@ async function run() {
       }
     });
 
+    // app.get("/products/:id/interests", async (req, res) => {
+
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const result = await productCollection.findOne(query);
+    //   res.send(result);
+    // });
+
     app.post("/products/:id/interests", verifyToken, async (req, res) => {
       const cropId = req.params.id;
       const query = { _id: new ObjectId(cropId) };
@@ -310,11 +318,32 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/products/:id/interests", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await productCollection.findOne(query);
-      res.send(result);
+    app.patch("/products/:cropId/interests/:interestId", async (req, res) => {
+      try {
+        const { cropId, interestId } = req.params;
+        const { status } = req.body;
+
+        const result = await productCollection.updateOne(
+          {
+            _id: new ObjectId(cropId),
+            "interests._id": new ObjectId(interestId),
+          },
+          {
+            $set: {
+              "interests.$.status": status,
+            },
+          }
+        );
+
+        if (result.matchedCount === 0) {
+          return res.status(404).send({ message: "Interest not found" });
+        }
+
+        res.send({ message: "Interest updated", result });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
     });
 
     app.get("/my-interests", verifyToken, async (req, res) => {
