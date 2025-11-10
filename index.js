@@ -65,7 +65,7 @@ async function run() {
       }
     });
 
-    app.get("/products/:id", async (req, res) => {
+    app.get("/products/:id", verifyToken, async (req, res) => {
       try {
         const id = req.params.id;
         const result = await productCollection.findOne({
