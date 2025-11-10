@@ -192,6 +192,33 @@ async function run() {
           .send({ message: "Failed to add product", error: error.message });
       }
     });
+
+    app.put("/products/:id", verifyToken, async (req, res) => {
+      try {
+        const id = req.params.id;
+        const newUpdateData = req.body;
+
+        const query = {
+          _id: new ObjectId(id),
+          "owner.ownerEmail": req.user.email,
+        };
+
+        const updateDoc = { $set: newUpdateData };
+        const result = await productCollection.updateOne(query, updateDoc);
+
+        if (result.matchedCount === 0) {
+          return res
+            .status(403)
+            .send({ message: "Not authorized or crop not found" });
+        }
+
+        res.send(result);
+      } catch (error) {
+        console.error("Error updating crop:", error);
+        res.status(500).send({ message: "Failed to update crop" });
+      }
+    });
+
     app.get("/latest-products", async (req, res) => {
       const result = await productCollection
         .find()
