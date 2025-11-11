@@ -250,7 +250,6 @@ async function run() {
         const crops = await productCollection
           .find({ "interests.userEmail": userEmail })
           .toArray();
-
         const interestCrops = crops.map((crop) => {
           const interest = crop.interests.find(
             (i) => i.userEmail === userEmail
@@ -261,6 +260,7 @@ async function run() {
             interest,
           };
         });
+        interestCrops.sort((a, b) => a.interest.quantity - b.interest.quantity);
         res.send(interestCrops);
       } catch {
         res.status(500).send({ message: "Failed to fetch interests" });
