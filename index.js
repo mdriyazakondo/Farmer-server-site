@@ -194,6 +194,12 @@ async function run() {
             .send({ message: "Owner cannot submit interest on own crop" });
         }
 
+        if (quantity > crop.quantity) {
+          return res
+            .status(400)
+            .send({ message: "Not enough quantity available" });
+        }
+
         const existing = crop.interests?.find((i) => i.userEmail === userEmail);
         if (existing) {
           return res
@@ -216,10 +222,12 @@ async function run() {
 
         const result = await productCollection.updateOne(
           { _id: new ObjectId(cropId) },
-          { $push: { interests: newInterest } }
+          { $push: { interests: newInterest }, $inc: { quantity: -quantity } }
         );
+
         res.send(result);
       } catch (error) {
+        console.error(error);
         res.status(500).send({ message: "Failed to submit interest" });
       }
     });
