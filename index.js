@@ -168,7 +168,14 @@ async function run() {
     app.post("/products/:id/interests", verifyToken, async (req, res) => {
       try {
         const cropId = req.params.id;
-        const { userEmail, userName, quantity, message } = req.body;
+        const {
+          userEmail,
+          userName,
+          quantity,
+          message,
+          ownerName,
+          ownerEmail,
+        } = req.body;
 
         if (!quantity || quantity < 1) {
           return res
@@ -199,6 +206,8 @@ async function run() {
           cropId: crop._id.toString(),
           userEmail,
           userName,
+          ownerName,
+          ownerEmail,
           quantity,
           message,
           status: "pending",
@@ -222,7 +231,6 @@ async function run() {
         try {
           const { cropId, interestId } = req.params;
           const { status } = req.body;
-
           const result = await productCollection.updateOne(
             {
               _id: new ObjectId(cropId),
