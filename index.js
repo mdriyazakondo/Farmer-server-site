@@ -256,9 +256,12 @@ async function run() {
     app.get("/my-interests", verifyToken, async (req, res) => {
       try {
         const userEmail = req.query.userEmail;
+        const sortType = req.query.sort; 
+
         const crops = await productCollection
           .find({ "interests.userEmail": userEmail })
           .toArray();
+
         const interestCrops = crops.map((crop) => {
           const interest = crop.interests.find(
             (i) => i.userEmail === userEmail
@@ -269,12 +272,23 @@ async function run() {
             interest,
           };
         });
-        interestCrops.sort((a, b) => a.interest.quantity - b.interest.quantity);
+
+        if (sortType === "low-high") {
+          interestCrops.sort(
+            (a, b) => a.interest.quantity - b.interest.quantity
+          );
+        } else if (sortType === "high-low") {
+          interestCrops.sort(
+            (a, b) => b.interest.quantity - a.interest.quantity
+          );
+        }
+
         res.send(interestCrops);
-      } catch {
+      } catch (error) {
         res.status(500).send({ message: "Failed to fetch interests" });
       }
     });
+    
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error.message);
   }
