@@ -200,13 +200,6 @@ async function run() {
             .send({ message: "Not enough quantity available" });
         }
 
-        const existing = crop.interests?.find((i) => i.userEmail === userEmail);
-        if (existing) {
-          return res
-            .status(400)
-            .send({ message: "You’ve already sent an interest" });
-        }
-
         const newInterest = {
           _id: new ObjectId(),
           cropId: crop._id.toString(),
