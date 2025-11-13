@@ -215,7 +215,9 @@ async function run() {
 
         const result = await productCollection.updateOne(
           { _id: new ObjectId(cropId) },
-          { $push: { interests: newInterest }, $inc: { quantity: -quantity } }
+          {
+            $push: { interests: newInterest },
+          }
         );
 
         res.send(result);
@@ -232,22 +234,44 @@ async function run() {
         try {
           const { cropId, interestId } = req.params;
           const { status } = req.body;
-          const result = await productCollection.updateOne(
-            {
-              _id: new ObjectId(cropId),
-              "interests._id": new ObjectId(interestId),
-            },
-            {
-              $set: { "interests.$.status": status },
-            }
-          );
 
-          if (result.matchedCount === 0) {
+          const crop = await productCollection.findOne({
+            _id: new ObjectId(cropId),
+          });
+          if (!crop) return res.status(404).send({ message: "Crop not found" });
+
+          const interest = crop.interests.find(
+            (i) => i._id.toString() === interestId
+          );
+          if (!interest)
             return res.status(404).send({ message: "Interest not found" });
+
+          const updateObj = { "interests.$.status": status.toLowerCase() };
+
+          if (status.toLowerCase() === "accepted") {
+            await productCollection.updateOne(
+              {
+                _id: new ObjectId(cropId),
+                "interests._id": new ObjectId(interestId),
+              },
+              {
+                $set: updateObj,
+                $inc: { quantity: -interest.quantity },
+              }
+            );
+          } else {
+            await productCollection.updateOne(
+              {
+                _id: new ObjectId(cropId),
+                "interests._id": new ObjectId(interestId),
+              },
+              { $set: updateObj }
+            );
           }
 
-          res.send({ message: "Interest updated", result });
-        } catch {
+          res.send({ message: "Interest updated successfully" });
+        } catch (err) {
+          console.error(err);
           res.status(500).send({ message: "Server error" });
         }
       }
@@ -256,7 +280,7 @@ async function run() {
     app.get("/my-interests", verifyToken, async (req, res) => {
       try {
         const userEmail = req.query.userEmail;
-        const sortType = req.query.sort; 
+        const sortType = req.query.sort;
 
         const crops = await productCollection
           .find({ "interests.userEmail": userEmail })
@@ -288,7 +312,6 @@ async function run() {
         res.status(500).send({ message: "Failed to fetch interests" });
       }
     });
-    
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error.message);
   }
