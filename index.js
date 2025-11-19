@@ -194,6 +194,16 @@ async function run() {
             .send({ message: "Owner cannot submit interest on own crop" });
         }
 
+        const alreadyInterested = crop.interests?.some(
+          (interest) => interest.userEmail === userEmail
+        );
+
+        if (alreadyInterested) {
+          return res
+            .status(400)
+            .send({ message: "You already submitted interest for this crop" });
+        }
+
         if (quantity > crop.quantity) {
           return res
             .status(400)
